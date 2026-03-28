@@ -1,0 +1,335 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit config for auto-grading workshop Day 3 PRs
+# Place this file in the ROOT of the Excalidraw fork repository.
+#
+# Day 3 focus: Spec-Driven Development (SDD) — participants choose one of:
+#   1. Simple Markdown spec (docs/specs/)
+#   2. OpenSpec (openspec/changes/)
+#   3. BMAD (via npx bmad-method install)
+# Then implement the issue and submit PR with spec + code + self-review.
+
+language: "uk-UA"
+tone_instructions: "Ментор Agentic IDE воркшопу. Відповідь українською: добрий тон, але вимогливо. Пропуски пояснюй. Статуси: ✅ ок, ⚠️ частково, ❌ ні."
+
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: false
+
+  auto_review:
+    enabled: true
+    drafts: true
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 0
+    base_branches:
+      - ".*"
+    ignore_title_keywords:
+      - "WIP"
+      - "[skip review]"
+    ignore_usernames:
+      - "dependabot[bot]"
+      - "renovate[bot]"
+      - "github-actions[bot]"
+
+  # ── File filters ──────────────────────────────────────────────
+  path_filters:
+    # Spec artifacts (any of the 3 approaches)
+    - "docs/specs/**"
+    - "openspec/**"
+    - "_bmad-output/**"
+    - "_bmad/**"
+    # Implementation code
+    - "packages/**"
+    - "excalidraw-app/**"
+    # Context files (may carry over from Day 2)
+    - ".cursor/**"
+    - ".cursorrules"
+    - "AGENTS.md"
+    # Exclusions
+    - "!node_modules/**"
+    - "!dist/**"
+    - "!build/**"
+    - "!coverage/**"
+    - "!*.lock"
+    - "!package-lock.json"
+    - "!yarn.lock"
+    - "!**/*.snap"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+
+  # ── Path-specific review instructions ─────────────────────────
+  path_instructions:
+    # ─── Approach 1: Simple Markdown Spec ───────────────────────
+    - path: "docs/specs/*.md"
+      instructions: |
+        Це специфікація SDD (Simple Markdown підхід) — завдання День 3.
+        Перевір наявність та якість таких секцій:
+        1. **Goal** — одне речення, конкретне, без "and"
+        2. **Context** — issue URL, current vs expected behavior
+        3. **Component / Module** — конкретні файли для зміни
+        4. **Changes Required** — що саме змінити в кожному файлі
+        5. **Non-goals** — що явно НЕ змінюємо (мінімум 2 пункти)
+        6. **Acceptance Criteria** — тестовані критерії (мінімум 3)
+        7. (Бажано) **Edge Cases** — граничні випадки
+        8. (Бажано) **Constraints** — обмеження та фіксовані рішення
+        Якщо Goal нечіткий або містить "and" — ⚠️ потребує розбиття.
+        Якщо Non-goals відсутні — ⚠️ AI може вийти за scope.
+        Якщо AC менше 3 або вони нетестовані — ⚠️ недостатньо.
+        Оціни якість: ✅ конкретна, тестована / ⚠️ потребує доопрацювання / ❌ порожня або безглузда.
+
+    # ─── Approach 2: OpenSpec ───────────────────────────────────
+    - path: "openspec/changes/**/proposal.md"
+      instructions: |
+        Це OpenSpec proposal — завдання День 3 (OpenSpec підхід).
+        Перевір наявність та якість секцій:
+        1. **Why** — чому ця зміна потрібна (бізнес/user value)
+        2. **What** — що саме змінюється (конкретно)
+        3. **Impact** — які компоненти/модулі зачеплені
+        4. **Risks** — потенційні ризики та їх мітигація
+        Якщо Why відсутній або формальний ("because issue says so") — ⚠️.
+        Якщо Impact не перелічує конкретних файлів/модулів — ⚠️.
+        Оціни: ✅ якісний / ⚠️ потребує деталей / ❌ порожній.
+
+    - path: "openspec/changes/**/specs/**/*.md"
+      instructions: |
+        Це OpenSpec delta spec з вимогами — завдання День 3 (OpenSpec підхід).
+        Перевір:
+        1. Використано правильний delta format: `## ADDED Requirements`,
+           `## MODIFIED Requirements`, або `## REMOVED Requirements`
+        2. Кожна вимога використовує `SHALL` або `MUST` для нормативної поведінки
+        3. Кожна вимога має хоча б один Scenario з GIVEN/WHEN/THEN
+        4. Scenarios конкретні — містять реальні дані, не placeholder-и
+        5. Є scenario для edge case (порожній input, невалідні дані тощо)
+        Якщо вимоги без SHALL/MUST — ⚠️ не відповідає OpenSpec формату.
+        Якщо scenarios без GIVEN/WHEN/THEN — ⚠️ не формалізовані.
+        Якщо немає edge case scenarios — ⚠️ недостатньо покриття.
+        Оціни: ✅ формалізовані / ⚠️ частково / ❌ не OpenSpec формат.
+
+    - path: "openspec/changes/**/tasks.md"
+      instructions: |
+        Це OpenSpec tasks checklist — завдання День 3 (OpenSpec підхід).
+        Перевір:
+        1. Містить конкретні, дрібні задачі (не "implement everything")
+        2. Задачі впорядковані логічно (парсер → рендеринг → тести)
+        3. Включає задачі для тестування (unit tests, integration)
+        4. Включає задачу для перевірки build (yarn build)
+        5. Використовує checkbox format: `- [ ]` або `- [x]`
+        Якщо менше 5 задач — ⚠️ занадто грубий поділ.
+        Якщо задачі без тестування — ⚠️ неповний чеклист.
+
+    - path: "openspec/project.md"
+      instructions: |
+        Це OpenSpec project context — описує проєкт для AI.
+        Перевір:
+        1. Описує tech stack (React, TypeScript, Vite, Yarn workspaces)
+        2. Вказує структуру monorepo
+        3. Містить ключові конвенції проєкту
+        Не має бути порожнім. Якщо placeholder — ⚠️.
+
+    - path: "openspec/specs/**/*.md"
+      instructions: |
+        Це OpenSpec base specs — поточна "правда" системи.
+        Перевір:
+        1. Описує existing capabilities, не proposed changes
+        2. Вимоги використовують SHALL/MUST
+        3. Scenarios з GIVEN/WHEN/THEN
+        Ці файли мають бути read-only reference, не активна робота.
+
+    # ─── Approach 3: BMAD ──────────────────────────────────────
+    - path: "_bmad-output/planning-artifacts/PRD.md"
+      instructions: |
+        Це BMAD PRD (Product Requirements Document) — завдання День 3 (BMAD підхід).
+        Перевір наявність секцій:
+        1. **Product Purpose** / Overview — чітко, 2-3 речення про фічу
+        2. **User Stories** — хоча б 2-3 user stories
+        3. **Acceptance Criteria** — конкретні, тестовані
+        4. **Non-functional Requirements** — якщо є (performance, security)
+        5. **Out of Scope** — що НЕ входить
+        Якщо PRD занадто загальний (описує весь Excalidraw, а не конкретну фічу) — ⚠️.
+        Оціни: ✅ конкретний / ⚠️ потребує фокусу / ❌ порожній.
+
+    - path: "_bmad-output/planning-artifacts/architecture.md"
+      instructions: |
+        Це BMAD Architecture Document — завдання День 3 (BMAD підхід).
+        Перевір:
+        1. Описує компоненти, що змінюються
+        2. Аналіз impact на існуючу архітектуру
+        3. Data flow для нової фічі
+        4. Рекомендації щодо реалізації
+        Якщо architecture doc не відповідає PRD — ⚠️ неконсистентність.
+
+    - path: "_bmad-output/planning-artifacts/epics/**"
+      instructions: |
+        Це BMAD Epics та Stories — завдання День 3 (BMAD підхід).
+        Перевір:
+        1. Stories мають чіткий scope (одна story = одна зміна)
+        2. Stories мають acceptance criteria
+        3. Stories впорядковані логічно
+        Якщо stories занадто великі ("implement entire feature") — ⚠️.
+
+    - path: "_bmad-output/**"
+      instructions: |
+        Загальна перевірка BMAD артефактів:
+        - Файли мають бути non-empty та змістовні
+        - Факти мають відповідати реальному Excalidraw проєкту
+        - Артефакти мають бути консистентні між собою (PRD ↔ Architecture ↔ Stories)
+
+    # ─── Implementation code ───────────────────────────────────
+    - path: "packages/excalidraw/**/*.{ts,tsx}"
+      instructions: |
+        Це реалізація SDD-специфікації — завдання День 3.
+        Перевір:
+        1. Зміни відповідають специфікації (якщо є docs/specs/, openspec/, або _bmad-output/)
+        2. Немає змін за межами scope (перевір non-goals / out-of-scope)
+        3. Дотримані TypeScript конвенції проєкту
+        4. Немає hardcoded values (magic numbers, strings)
+        5. Немає security concerns (особливо XSS для URL/link handling)
+        6. i18n оброблений коректно (якщо є user-facing strings)
+        7. Edge cases оброблені (null, undefined, порожні strings)
+        Якщо зміни не відповідають spec — ❌ порушення SDD контракту.
+        Якщо є зміни за межами scope — ⚠️ blast radius.
+
+    - path: "packages/excalidraw/**/*.test.{ts,tsx}"
+      instructions: |
+        Це тести для SDD-реалізації — завдання День 3.
+        Перевір:
+        1. Тести покривають acceptance criteria зі специфікації
+        2. Тести тестують реальну поведінку, не mock-и
+        3. Є тести для edge cases
+        4. Тести мають осмислені назви (describe/it)
+        5. Немає snapshot-тестів замість behavior-тестів
+        Якщо тестів немає взагалі — ⚠️ (може бути прийнятно для деяких змін).
+        Якщо тести тестують mock замість behavior — ❌.
+
+    - path: "packages/**/*.{ts,tsx}"
+      instructions: |
+        Реалізація зміни за SDD-специфікацією (День 3).
+        Перевір, що зміни:
+        - Відповідають обраному SDD-підходу
+        - Мінімальний blast radius
+        - Дотримуються конвенцій Excalidraw (React, TypeScript, functional components)
+
+    # ─── Context files (carryover from Day 2) ──────────────────
+    - path: ".cursor/rules/*.mdc"
+      instructions: |
+        Правила Cursor (можуть бути з Дня 2 або нові для Дня 3).
+        Якщо нові — перевір, що вони специфічні для Excalidraw.
+
+    - path: "AGENTS.md"
+      instructions: |
+        AGENTS.md (може бути з Дня 2 або оновлений для Дня 3).
+        Якщо змінений — перевір, що зміни відповідають контексту.
+
+  # ── Pre-merge checks (grading criteria) ───────────────────────
+  pre_merge_checks:
+    title:
+      mode: "warning"
+      requirements: >
+        PR title should follow the format: "Day 3: <participant-name> — SDD Assignment"
+        or similar descriptive format in Ukrainian or English.
+
+    description:
+      mode: "warning"
+
+    custom_checks:
+      - mode: "warning"
+        name: "SDD approach chosen and documented"
+        instructions: >
+          Check that the PR description clearly states which SDD approach
+          was used: Simple Markdown, OpenSpec, or BMAD.
+          The PR should include a brief justification for why this approach
+          was chosen (1-3 sentences).
+          PASS if approach is stated and briefly justified.
+          FAIL if no approach mentioned or no justification provided.
+
+      - mode: "warning"
+        name: "Specification artifacts present"
+        instructions: >
+          Check that at least ONE of the following specification formats
+          is present and non-empty in the PR:
+
+          Option A — Simple Markdown:
+          - At least one file in docs/specs/ with sections:
+            Goal, Context, Component/Module, Changes Required,
+            Non-goals (2+ items), Acceptance Criteria (3+ items)
+
+          Option B — OpenSpec:
+          - openspec/changes/<name>/proposal.md (with Why, What, Impact)
+          - openspec/changes/<name>/specs/<capability>/spec.md
+            (with ADDED/MODIFIED Requirements using SHALL/MUST
+            and Scenarios using GIVEN/WHEN/THEN)
+          - openspec/changes/<name>/tasks.md (implementation checklist)
+
+          Option C — BMAD:
+          - _bmad-output/planning-artifacts/PRD.md
+            (with User Stories, Acceptance Criteria, Out of Scope)
+          - Optionally: architecture.md, epics/
+
+          PASS if at least one option is fully present with substantive content.
+          FAIL if no specification artifacts exist, or they are empty/placeholder.
+
+      - mode: "warning"
+        name: "Implementation code present"
+        instructions: >
+          Check that the PR includes actual code changes in the packages/
+          directory (or excalidraw-app/ for app-level changes).
+          Changes should be implementation of the specification —
+          not just documentation or config changes.
+          PASS if there are meaningful code changes in packages/.
+          FAIL if PR contains only specs/docs without implementation.
+
+      - mode: "warning"
+        name: "Self-review checklist in PR description"
+        instructions: >
+          Check that the PR description includes a Self-Review Checklist
+          with at least 8 of these items (checked or unchecked):
+          - SDD approach chosen and justified
+          - Implementation matches specification
+          - Project conventions followed
+          - Edge cases handled
+          - Blast radius acceptable
+          - Existing tests pass
+          - New tests added (if needed)
+          - No security concerns
+          - i18n handled
+          - No hardcoded values
+          - Code understandable by another developer
+          PASS if checklist is present with 8+ items.
+          FAIL if no checklist or fewer than 8 items.
+
+      - mode: "warning"
+        name: "Blast radius acceptable"
+        instructions: >
+          Check the overall diff to ensure changes are focused:
+          1. Changes should be primarily in files related to the chosen issue
+          2. No large-scale refactoring unrelated to the spec
+          3. No "improvements" beyond the specification scope
+          4. Ideally fewer than 15 files changed (excluding specs/docs)
+          If more than 20 non-spec/non-doc files are changed — FAIL.
+          If changes include files clearly unrelated to the issue — FAIL.
+          Otherwise PASS with a note about the blast radius.
+
+      - mode: "warning"
+        name: "Spec-implementation alignment"
+        instructions: >
+          Cross-check the specification against the implementation:
+          1. Every Acceptance Criterion from the spec should have
+             corresponding code changes
+          2. Non-goals / Out-of-scope items should NOT have
+             corresponding code changes
+          3. If OpenSpec is used, tasks.md items should map to changes
+          4. If BMAD is used, stories should map to changes
+          PASS if implementation aligns with spec.
+          FAIL if there are clear misalignments or scope violations.
+
+chat:
+  auto_reply: true
