@@ -25,3 +25,9 @@ Canvas search in the sidebar shows a flat list of matches (frames and text). Whe
 - **Secondary**: Any parent layout that wraps `SearchMenu` in the default sidebar (`packages/excalidraw/components/DefaultSidebar.tsx` / sidebar tab content) if height constraints must be applied there.
 - **Tests**: Add or extend component/tests if the repo covers `SearchMenu` or sidebar layout; otherwise manual verification in the app.
 - **APIs**: No public API or package export changes expected.
+
+### Risks
+
+- **Performance with many matches**: Rendering a large flat list of result rows can stress layout and scrolling. **Mitigation**: Treat virtualization or “show only current match” as a follow-up if needed (aligned with the optional deferral in What Changes); plan or prototype windowing before shipping if profiling shows pain points.
+- **Side effects on other tabs**: Flex and `min-height: 0` (in `SearchMenu.scss` and the shared sidebar tab layout, including `[role="tabpanel"]` in `Sidebar.scss`) can change how sibling tab panels shrink or scroll. **Mitigation**: Manually verify Library and Comments (and any other sidebar tabs) still lay out and scroll correctly after changes to `SearchMenu.tsx` / `SearchMenu.scss`.
+- **Mobile scroll behavior**: Touch scrolling, nested scroll containers, and focus-driven `scrollIntoView` can differ from desktop. **Mitigation**: Manual mobile testing on target devices or responsive devtools for the search panel.

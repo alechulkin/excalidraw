@@ -436,7 +436,11 @@ export const SearchMenu = () => {
           )}
       </div>
 
-      <div className="layer-ui__search-results-scroll">
+      <div
+        className="layer-ui__search-results-scroll"
+        role="region"
+        aria-label={t("search.resultsRegion")}
+      >
         <MatchList
           matches={searchMatches}
           onItemClick={setFocusIndex}
@@ -495,6 +499,7 @@ interface MatchListProps {
 
 const MatchListBase = (props: MatchListProps) => {
   const itemRefs = useRef(new Map<number, HTMLDivElement | null>());
+  const scrollIntoViewRafRef = useRef<number | null>(null);
 
   const setItemRef = useCallback((index: number) => {
     return (el: HTMLDivElement | null) => {
@@ -523,9 +528,33 @@ const MatchListBase = (props: MatchListProps) => {
     if (idx === null || idx < 0) {
       return;
     }
-    itemRefs.current
-      .get(idx)
-      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+
+    if (scrollIntoViewRafRef.current !== null) {
+      cancelAnimationFrame(scrollIntoViewRafRef.current);
+    }
+
+    scrollIntoViewRafRef.current = requestAnimationFrame(() => {
+      scrollIntoViewRafRef.current = null;
+      const el = itemRefs.current.get(idx);
+      if (!el) {
+        return;
+      }
+      const reduceMotion =
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+        behavior: reduceMotion ? "auto" : "smooth",
+      });
+    });
+
+    return () => {
+      if (scrollIntoViewRafRef.current !== null) {
+        cancelAnimationFrame(scrollIntoViewRafRef.current);
+        scrollIntoViewRafRef.current = null;
+      }
+    };
   }, [props.focusIndex, props.matches.nonce]);
 
   return (
