@@ -11,7 +11,6 @@ import {
   useRef,
   useState,
 } from "react";
-import type { RefCallback } from "react";
 
 import {
   CLASSES,
@@ -59,6 +58,8 @@ import {
 } from "./icons";
 
 import "./SearchMenu.scss";
+
+import type { RefCallback } from "react";
 
 import type { AppClassProperties, SearchMatch } from "../types";
 
@@ -499,18 +500,40 @@ interface MatchListProps {
 
 const MatchListBase = (props: MatchListProps) => {
   const itemRefs = useRef(new Map<number, HTMLDivElement | null>());
+  const itemRefCallbacksRef = useRef(
+    new Map<number, RefCallback<HTMLDivElement | null>>(),
+  );
   const scrollIntoViewRafRef = useRef<number | null>(null);
 
   const setItemRef = useCallback((index: number) => {
-    return (el: HTMLDivElement | null) => {
-      const map = itemRefs.current;
-      if (el) {
-        map.set(index, el);
-      } else {
-        map.delete(index);
-      }
-    };
+    const callbacks = itemRefCallbacksRef.current;
+    let cb = callbacks.get(index);
+    if (!cb) {
+      cb = (el: HTMLDivElement | null) => {
+        const map = itemRefs.current;
+        if (el) {
+          map.set(index, el);
+        } else {
+          map.delete(index);
+          itemRefCallbacksRef.current.delete(index);
+        }
+      };
+      callbacks.set(index, cb);
+    }
+    return cb;
   }, []);
+
+  useLayoutEffect(() => {
+    const len = props.matches.items.length;
+    const callbacks = itemRefCallbacksRef.current;
+    const elems = itemRefs.current;
+    for (const idx of [...callbacks.keys()]) {
+      if (idx < 0 || idx >= len) {
+        callbacks.delete(idx);
+        elems.delete(idx);
+      }
+    }
+  }, [props.matches.items.length, props.matches.nonce]);
 
   const frameNameMatches = useMemo(
     () =>

@@ -1,3 +1,5 @@
+# Proposal: Canvas Search Results Scroll
+
 ## Why
 
 Canvas search in the sidebar shows a flat list of matches (frames and text). When there are many results, the list overflows the panel: users cannot reach items below the fold, and using the prev/next controls changes focus without keeping the highlighted row in view, so the list appears to “jump” and feels broken ([GitHub issue #11092](https://github.com/excalidraw/excalidraw/issues/11092)). Fixing scroll containment and focus visibility restores predictable navigation and aligns with expectations for long result sets.
